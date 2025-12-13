@@ -40,3 +40,6 @@ example_component:
     id: example_component_1
     foo: true
 
+output:
+  - platform: empty_binary_output
+    id: empty_binary_output_1

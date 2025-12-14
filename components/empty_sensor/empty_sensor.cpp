@@ -8,7 +8,7 @@ static const char *TAG = "empty_sensor.sensor";
 
 void EmptySensor::setup() {
     // Afficher l'intervalle de mise à jour dans les logs
-    ESP_LOGCONFIG(TAG, "Update interval: %d ms", this->get_update_interval());  
+    ESP_LOGD(TAG, "Update interval: %d ms", this->get_update_interval());  
 }
 
 void EmptySensor::loop() {

@@ -1,5 +1,6 @@
 #include "esphome/core/log.h"
 #include "empty_sensor.h"
+#include <stdio.h>
 
 #define OOK_EXPECT_PULSE 0
 #define OOK_EXPECT_GAP 1
@@ -19,6 +20,21 @@ void IRAM_ATTR EmptySensorStore::gpio_intr(EmptySensorStore *arg)
    {
       arg->pulse = 65535;
    }
+}
+
+
+void int_array_to_string(const unsigned int *arr, size_t n, char *buffer, size_t buf_size)
+{
+    size_t pos = 0;
+    pos += snprintf(buffer + pos, buf_size - pos, "[");
+
+    for (size_t i = 0; i < n; ++i) {
+        pos += snprintf(buffer + pos, buf_size - pos,
+                        "%d%s", arr[i], (i + 1 < n) ? ", " : "");
+        if (pos >= buf_size) break;
+    }
+
+    snprintf(buffer + pos, buf_size - pos, "]");
 }
 
 void detect_pulse_length(unsigned int *timings, unsigned int count)
@@ -60,6 +76,8 @@ void EmptySensor::loop()
 
    static unsigned int idx = 0;
    static int in_loop = 0;
+
+   char logbuf[1024];
 //    unsigned int i;
 
 //    cli();
@@ -92,6 +110,10 @@ void EmptySensor::loop()
             if ((this->store_.pulse > 15000) && (idx >= 32))
             {
                 ESP_LOGD(TAG, "Pulse: %d idx: %d", this->store_.pulse, idx);
+
+                int_array_to_string(this->store_.timings_data, idx, logbuf, sizeof(logbuf));
+
+                ESP_LOGD(TAG, "%s", logbuf);
     
                 detect_pulse_length(this->store_.timings_data, idx);
                 // decode_ook_ppm_nexus(this->store_.timings_data, idx);

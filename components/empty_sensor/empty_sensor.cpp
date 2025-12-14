@@ -19,13 +19,20 @@ void EmptySensor::loop()
     unsigned long current_time = millis(); // Temps actuel en millisecondes
 
     // Vérifier si une seconde s'est écoulée
-    if (current_time - last_time >= 10000)
-    {                             // Si 10000 ms (10 seconde) se sont écoulées
-        counter += 10;            // Incrémenter le compteur
+    if (current_time - last_time >= 1000)
+    {                             // Si 1000 ms (1 seconde) se sont écoulées
+        counter++;                // Incrémenter le compteur
         last_time = current_time; // Mettre à jour le dernier temps avec le temps actuel
 
         this->publish_state(counter); // Publie la valeur du compteur sur le capteur
     }
+}
+
+void EmptySensor::update()
+{
+    // Publier la valeur du compteur
+    ESP_LOGD(TAG, "in update");
+    this->publish_state(counter); // Publie la valeur du compteur sur le capteur
 }
 
 void EmptySensor::dump_config()

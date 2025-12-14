@@ -36,25 +36,6 @@ external_components:
         type: local
         path: components
 
-example_component:
-    id: example_component_1
-    foo: true
-
-output:
-  - platform: empty_binary_output
-    id: empty_binary_output_1
-
-  - platform: empty_float_output
-    id: empty_float_output_1
-
-binary_sensor:
-  - platform: empty_binary_sensor
-    name: Empty binary sensor
-
 sensor:
   - platform: empty_sensor
     name: Empty sensor
-
-text_sensor:
-  - platform: empty_text_sensor
-    name: Empty text sensor

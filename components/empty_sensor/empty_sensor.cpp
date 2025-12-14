@@ -1,29 +1,45 @@
 #include "esphome/core/log.h"
 #include "empty_sensor.h"
 
-namespace esphome {
-namespace empty_sensor {
+namespace esphome
+{
+namespace empty_sensor
+{
 
 static const char *TAG = "empty_sensor.sensor";
 
-void EmptySensor::setup() {
+void EmptySensor::setup()
+{
+
 }
 
-void EmptySensor::loop() {
-    // Incrémenter le compteur toutes les secondes
-    counter++;  
+void EmptySensor::loop()
+{
+    static unsigned long last_time = 0;    // Variable pour mémoriser le dernier temps
+    unsigned long current_time = millis(); // Temps actuel en millisecondes
+
+    // Vérifier si une seconde s'est écoulée
+    if (current_time - last_time >= 1000)
+    {                             // Si 1000 ms (1 seconde) se sont écoulées
+        counter++;                // Incrémenter le compteur
+        last_time = current_time; // Mettre à jour le dernier temps avec le temps actuel
+
+        this->publish_state(counter); // Publie la valeur du compteur sur le capteur
+    }
 }
 
-void EmptySensor::update() {
+void EmptySensor::update()
+{
     // Publier la valeur du compteur
-    ESP_LOGD(TAG, "in update"); 
-    this->publish_state(counter);  // Publie la valeur du compteur sur le capteur
+    ESP_LOGD(TAG, "in update");
+    this->publish_state(counter); // Publie la valeur du compteur sur le capteur
 }
 
-void EmptySensor::dump_config() {
+void EmptySensor::dump_config()
+{
     ESP_LOGCONFIG(TAG, "Empty sensor");
-    ESP_LOGCONFIG(TAG, "Update interval: %d ms", this->get_update_interval());  
+    ESP_LOGCONFIG(TAG, "Update interval: %d ms", this->get_update_interval());
 }
 
-} //namespace empty_sensor
-} //namespace esphome
+} // namespace empty_sensor
+} // namespace esphome

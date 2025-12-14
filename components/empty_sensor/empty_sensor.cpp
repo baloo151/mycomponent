@@ -28,13 +28,6 @@ void EmptySensor::loop()
     }
 }
 
-void EmptySensor::update()
-{
-    // Publier la valeur du compteur
-    ESP_LOGD(TAG, "in update");
-    this->publish_state(counter); // Publie la valeur du compteur sur le capteur
-}
-
 void EmptySensor::dump_config()
 {
     ESP_LOGCONFIG(TAG, "Empty sensor");

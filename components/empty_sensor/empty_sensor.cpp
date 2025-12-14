@@ -88,10 +88,11 @@ void EmptySensor::loop()
                 idx = 0;
             }
 
-            ESP_LOGD(TAG, "Pulse: %d idx: %d", this->store_.pulse, idx);
 
             if ((this->store_.pulse > 15000) && (idx >= 32))
             {
+                ESP_LOGD(TAG, "Pulse: %d idx: %d", this->store_.pulse, idx);
+    
                 detect_pulse_length(this->store_.timings_data, idx);
                 // decode_ook_ppm_nexus(this->store_.timings_data, idx);
 

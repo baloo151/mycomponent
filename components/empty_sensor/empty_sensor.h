@@ -1,21 +1,37 @@
 #pragma once
 
 #include "esphome/core/component.h"
+#include "esphome/core/hal.h"
 #include "esphome/components/sensor/sensor.h"
 
 namespace esphome {
 namespace empty_sensor {
 
+/// Store data in a class that doesn't use multiple-inheritance (vtables in flash)
+class EmptySensorStore {
+    public:
+        void setup(InternalGPIOPin *pin) {
+            pin->setup();
+            this->pin_ = pin->to_isr();
+            pin->attach_interrupt(&EmptySensorStore::gpio_intr, this, gpio::INTERRUPT_ANY_EDGE);
+        }
+        static void gpio_intr(EmptySensorStore *arg);
+
+    protected:
+        ISRInternalGPIOPin pin_;
+};
+
+
 class EmptySensor : public sensor::Sensor, public Component {
     public:
-        EmptySensor() : counter(0) {}  // Initialisation du compteur
+        void set_pin(InternalGPIOPin *pin) { pin_ = pin; }
+        void setup() override{ this->store_.setup(this->pin_); }
+        void loop() override;
+        void dump_config() override;
 
-    void setup() override;
-    void loop() override;
-    void dump_config() override;
-
-    private:
-        int counter;  // Variable pour le compteur
+    protected:
+        EmptySensorStore store_;
+        InternalGPIOPin *pin_;
 };
 
 } //namespace empty_sensor

@@ -6,7 +6,7 @@
 namespace esphome {
 namespace empty_sensor {
 
-class EmptySensor : public sensor::Sensor, public PollingComponent {
+class EmptySensor : public sensor::Sensor {
     public:
         EmptySensor() : counter(0) {}  // Initialisation du compteur
 

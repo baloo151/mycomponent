@@ -11,27 +11,14 @@ static const char *TAG = "empty_sensor.sensor";
 
 void IRAM_ATTR EmptySensorStore::gpio_intr(EmptySensorStore *arg)
 {
-    static unsigned long edgeTimeStamp[3] = {0, };
-    static bool skip = false;
+    static unsigned long last;
 
-    // Filter out too short pulses. This method works as a low pass filter.
-    edgeTimeStamp[1] = edgeTimeStamp[2];
-    edgeTimeStamp[2] = micros();
-
-    if (skip) {
-        skip = false;
-        return;
+    arg->pulse = micros() - last;
+    last = last + arg->pulse;
+    if (arg->pulse > 65535)
+    {
+        arg->pulse = 65535;
     }
-
-    if (edgeTimeStamp[2]-edgeTimeStamp[1] < 200) {
-        // Last edge was too short.
-        // Skip this edge, and the next too.
-        skip = true;
-        return;
-    }
-
-    arg->pulse = edgeTimeStamp[1] - edgeTimeStamp[0];
-    edgeTimeStamp[0] = edgeTimeStamp[1];
 }
 
 void decode_ook_ppm_nexus(EmptySensorStore *arg, unsigned int count)
@@ -124,20 +111,28 @@ void EmptySensor::loop()
 
     if (pulse > 0)
     {
-        this->store_.timings_data[idx] = pulse;
-        idx++;
-        if (idx >= BUFFSIZE)
+        if (pulse < 200)
         {
+            // noise
             idx = 0;
         }
-
-
-        if ((pulse > 15000) && (idx >= 32))
+        else
         {
-            decode_ook_ppm_nexus(&this->store_, idx);
+            this->store_.timings_data[idx] = pulse;
+            idx++;
+            if (idx >= BUFFSIZE)
+            {
+                idx = 0;
+            }
 
-            idx = 0;
+            if ((pulse > 15000) && (idx >= 32))
+            {
+                decode_ook_ppm_nexus(&this->store_, idx);
+
+                idx = 0;
+            }
         }
+
     }
 
     in_loop = 0;

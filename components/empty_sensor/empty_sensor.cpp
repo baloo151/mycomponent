@@ -61,7 +61,7 @@ void EmptySensor::loop()
    static unsigned int idx = 0;
    unsigned int i;
 
-//    cli();
+   cli();
 
     if (this->store_.pulse > 0)
     {
@@ -92,7 +92,7 @@ void EmptySensor::loop()
         this->store_.pulse = 0;
     }
 
-//    sei();
+   sei();
 }
 
 void EmptySensor::dump_config()

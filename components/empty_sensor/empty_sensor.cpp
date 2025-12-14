@@ -88,6 +88,7 @@ void EmptySensor::loop()
                 idx = 0;
             }
 
+            ESP_LOGD(TAG, "Pulse: %d idx: %d", this->store_.pulse, idx);
 
             if ((this->store_.pulse > 15000) && (idx >= 32))
             {

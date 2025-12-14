@@ -3,6 +3,9 @@
 #include "esphome/core/component.h"
 #include "esphome/core/hal.h"
 #include "esphome/components/sensor/sensor.h"
+#include "bitbuffer.h"
+
+#define BUFFSIZE 1024
 
 namespace esphome {
 namespace empty_sensor {
@@ -19,6 +22,9 @@ class EmptySensorStore {
 
     protected:
         ISRInternalGPIOPin pin_;
+        volatile unsigned long pulse = 0;
+        unsigned int timings_data[BUFFSIZE];
+        bitbuffer_t bits = {0};
 };
 
 

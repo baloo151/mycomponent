@@ -20,11 +20,12 @@ class EmptySensorStore {
         }
         static void gpio_intr(EmptySensorStore *arg);
 
-    protected:
-        ISRInternalGPIOPin pin_;
         volatile unsigned long pulse = 0;
         unsigned int timings_data[BUFFSIZE];
         bitbuffer_t bits = {0};
+
+    protected:
+        ISRInternalGPIOPin pin_;
 };
 
 

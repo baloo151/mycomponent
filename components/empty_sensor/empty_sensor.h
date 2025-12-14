@@ -32,7 +32,7 @@ class EmptySensorStore {
 class EmptySensor : public sensor::Sensor, public Component {
     public:
         void set_pin(InternalGPIOPin *pin) { pin_ = pin; }
-        void setup() override{ this->store_.setup(this->pin_); }
+        void setup() override { this->store_.setup(this->pin_); }
         void loop() override;
         void dump_config() override;
 

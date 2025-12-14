@@ -34,48 +34,82 @@ void IRAM_ATTR EmptySensorStore::gpio_intr(EmptySensorStore *arg)
     edgeTimeStamp[0] = edgeTimeStamp[1];
 }
 
-void detect_pulse_length(unsigned int *timings, unsigned int count)
+void decode_ook_ppm_nexus(EmptySensorStore *arg, unsigned int count)
 {
-    unsigned int pulse_length;
-    float f_pulse_length;
-    unsigned int pulse_length_min;
-    unsigned int pulse_length_max;
-    int pulses_count = 0;
+   unsigned int pulse_l = arg->timings_data[count-2] * 0.8;
+   unsigned int pulse_u = arg->timings_data[count-2] * 1.2;
+   unsigned int zero_l = 1000 * 0.8;
+   unsigned int zero_u = 1000 * 1.2;
+   unsigned int one_l = 2000 * 0.8;
+   unsigned int one_u = 2000 * 1.2;
+   unsigned int reset = 5000;
 
-    unsigned int i = count - 2;
-    pulse_length = pulse_length_min = pulse_length_max = timings[i];
-    f_pulse_length = pulse_length;
+   int state = OOK_EXPECT_PULSE;
 
-    while ((i >= 0) && (timings[i] >= pulse_length*0.6) && (timings[i] <= pulse_length*1.4)) {
-        f_pulse_length = (f_pulse_length * pulses_count + timings[i]) / (pulses_count + 1);
-        pulse_length = int(f_pulse_length);
-        pulses_count++;
+   bitbuffer_clear(&arg->bits);
 
-        if (timings[i] < pulse_length_min)
-        {
-            pulse_length_min = timings[i];
-        }
+   unsigned int nbits = 0;
 
-        if (timings[i] > pulse_length_max)
-        {
-            pulse_length_max = timings[i];
-        }
+   for (unsigned int i = 0; i < count; i++)
+   {
+      switch (state)
+      {
+      case OOK_EXPECT_PULSE:
+         if ((arg->timings_data[i] > pulse_l) && (arg->timings_data[i] < pulse_u))
+         {
+            state = OOK_EXPECT_GAP;
+         }
+         break;
+      case OOK_EXPECT_GAP:
+         if ((arg->timings_data[i] > zero_l) && (arg->timings_data[i] < zero_u))
+         {
+            bitbuffer_add_bit(&arg->bits, 0);
+            nbits++;
+         }
+         else if ((arg->timings_data[i] > one_l) && (arg->timings_data[i] < one_u))
+         {
+            bitbuffer_add_bit(&arg->bits, 1);
+            nbits++;
+         }
+         else if (arg->timings_data[i] < reset)
+         {
+            if (nbits >= 16)
+            {
+               bitbuffer_add_row(&arg->bits);
+               nbits = 0;
+            }
+         }
+         state = OOK_EXPECT_PULSE;
+      }
+   }
+   int row = bitbuffer_find_repeated_row(&arg->bits, 3, 36);
+   if (row < 0)
+      return;
 
-        i = i - 2;
-    }
+   if (arg->bits.bits_per_row[row] == 36)
+   {
+      uint8_t *b;
 
-    ESP_LOGD(TAG, "Count: %d Mean: %d Min: %d Max: %d", pulses_count, pulse_length, pulse_length_min, pulse_length_max);
+      b = arg->bits.bb[row];
+
+      int id = b[0];
+      int battery = b[1] & 0x80;
+      int channel = ((b[1] & 0x30) >> 4) + 1;
+      int temp_raw = (int16_t)((b[1] << 12) | (b[2] << 4)); // sign-extend
+      float temp_c = (temp_raw >> 4) * 0.1f;
+      int humidity = (((b[3] & 0x0F) << 4) | (b[4] >> 4));
+
+      ESP_LOGD(TAG, "Nexus id: %d; battery_ok: %d; channel: %d; temp: %.1f C; humidity: %d%%",
+               id, !!battery, channel, temp_c, humidity);
+   }
 }
 
 void EmptySensor::loop()
 {
     // this->publish_state(counter); // Publie la valeur du compteur sur le capteur
 
-   static unsigned int idx = 0;
-   static int in_loop = 0;
-//    unsigned int i;
-
-//    cli();
+    static unsigned int idx = 0;
+    static int in_loop = 0;
 
     if (in_loop)
     {
@@ -90,36 +124,23 @@ void EmptySensor::loop()
 
     if (pulse > 0)
     {
-        if (pulse < 200)
+        this->store_.timings_data[idx] = pulse;
+        idx++;
+        if (idx >= BUFFSIZE)
         {
-            // noise
             idx = 0;
         }
-        else
+
+
+        if ((pulse > 15000) && (idx >= 32))
         {
-            this->store_.timings_data[idx] = pulse;
-            idx++;
-            if (idx >= BUFFSIZE)
-            {
-                idx = 0;
-            }
+            decode_ook_ppm_nexus(&this->store_, idx);
 
-
-            if ((pulse > 15000) && (idx >= 32))
-            {
-                ESP_LOGD(TAG, "Pulse: %d idx: %d", pulse, idx);
-    
-                detect_pulse_length(this->store_.timings_data, idx);
-                // decode_ook_ppm_nexus(this->store_.timings_data, idx);
-
-                idx = 0;
-            }
+            idx = 0;
         }
     }
 
     in_loop = 0;
-
-//    sei();
 }
 
 void EmptySensor::dump_config()

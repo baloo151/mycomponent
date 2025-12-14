@@ -59,9 +59,18 @@ void EmptySensor::loop()
     // this->publish_state(counter); // Publie la valeur du compteur sur le capteur
 
    static unsigned int idx = 0;
-   unsigned int i;
+   static int in_loop = 0;
+//    unsigned int i;
 
-   cli();
+//    cli();
+
+    if (in_loop)
+    {
+        // avoid re-entrance
+        return;
+    }
+
+    in_loop = 1;
 
     if (this->store_.pulse > 0)
     {
@@ -92,7 +101,9 @@ void EmptySensor::loop()
         this->store_.pulse = 0;
     }
 
-   sei();
+    in_loop = 0;
+
+//    sei();
 }
 
 void EmptySensor::dump_config()

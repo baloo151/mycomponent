@@ -6,13 +6,16 @@
 namespace esphome {
 namespace empty_sensor {
 
+<<<<<<< Updated upstream
 class EmptySensor : public sensor::Sensor, public PollingComponent {
+=======
+class EmptySensor : public sensor::Sensor, public Component {
+>>>>>>> Stashed changes
     public:
         EmptySensor() : counter(0) {}  // Initialisation du compteur
 
     void setup() override;
     void loop() override;
-    void update() override;
     void dump_config() override;
 
     private:

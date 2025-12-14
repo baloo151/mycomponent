@@ -38,7 +38,6 @@ void EmptySensor::update()
 void EmptySensor::dump_config()
 {
     ESP_LOGCONFIG(TAG, "Empty sensor");
-    ESP_LOGCONFIG(TAG, "Update interval: %d ms", this->get_update_interval());
 }
 
 } // namespace empty_sensor
